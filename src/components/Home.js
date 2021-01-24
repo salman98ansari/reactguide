@@ -2,36 +2,37 @@ import {useState, useEffect} from 'react';
 import BlogList from './BlogList';
 
 const Home = () => {
-    const [blogs, setBlogs] = useState([
-        { title: 'My new website', body: 'lorem ipsum...', author: 'mario', id: 1 },
-        { title: 'Welcome party!', body: 'lorem ipsum...', author: 'yoshi', id: 2 },
-        { title: 'Web dev top tips', body: 'lorem ipsum...', author: 'mario', id: 3 }
-      ])
-
-      const handleDelete = (id) =>{
-          const newBlogs = blogs.filter((blog) => blog.id !== id);
-          setBlogs(newBlogs);
-      }
-      const [name , setName] = useState('mario')
+    const [blogs, setBlogs] = useState(null);
+    const [isPending , setisPending] =useState(true);
+    const [error, setError] = useState(null);
 
       useEffect(()=>{
-          console.log('use effect run');
-          console.log(name);
-      },[name]);
+          fetch('http://localhost:8000/blogs')
+          .then(res => {
+              if(!res.ok){
+                  throw Error('Could Not Fetch the Data for that Resource');
+              }
+              return res.json();
+          })
+          .then((data) => {
+              setBlogs(data);
+              setisPending(false);
+              setError(null);
+          })
+          .catch((err)=>{
+              setisPending(false);
+              setError(err.message);
+          })          
+      },[]);
 
     return (  
         <div className="home">
-            <BlogList
+            {error && <div>{error}</div>}
+            {isPending && <div>Loading.......</div>}
+            { blogs && <BlogList
             salman ={blogs}
             title="All Blogs !"
-            handleDelete={handleDelete} />
-            <BlogList
-            salman ={blogs.filter((blog)=> blog.author === 'mario')}
-            title="Marios's Blogs !"
-            handleDelete={handleDelete} />
-            <button onClick={()=> setName('luigi')}>change name</button>
-            <p>{name}</p>
-
+             />}
         </div>
     );
 }
